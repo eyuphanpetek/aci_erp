@@ -1,0 +1,31 @@
+# .NET Build & Cache
+**/bin/
+**/obj/
+*.user
+*.userosscache
+*.sln.docstates
+
+# IDE Settings
+.vscode/
+.idea/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.suo
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Docker
+.dockerignore
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Large Original Templates
+themeforest-OFbjloTJ-vuexy-vuejs-html-laravel-admin-dashboard-template/
+themeforest-*/
+**/node_modules/
