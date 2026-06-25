@@ -50,6 +50,21 @@ document.addEventListener('DOMContentLoaded', async function () {
         try {
             if (dt_user_table) {
                 dt_user = new DataTable(dt_user_table, {
+                    language: {
+                        search: '',
+                        searchPlaceholder: 'Kullanıcı Ara',
+                        lengthMenu: '_MENU_',
+                        info: '_TOTAL_ kayıttan _START_ - _END_ arası gösteriliyor',
+                        infoEmpty: 'Kayıt bulunamadı',
+                        infoFiltered: '(_MAX_ kayıt arasından filtrelendi)',
+                        zeroRecords: 'Eşleşen kayıt bulunamadı',
+                        paginate: {
+                            first: 'İlk',
+                            previous: 'Önceki',
+                            next: 'Sonraki',
+                            last: 'Son'
+                        }
+                    },
                     processing: true,
                     serverSide: true,
                     ajax: async function (data, callback, settings) {
@@ -149,14 +164,14 @@ document.addEventListener('DOMContentLoaded', async function () {
                             render: (data, type, full) => {
                                 const isActive = full.isActive;
                                 const statusClass = isActive ? 'bg-label-success' : 'bg-label-secondary';
-                                const statusTitle = isActive ? 'Active' : 'Inactive';
+                                const statusTitle = isActive ? 'Aktif' : 'Pasif';
                                 return `<span class="badge ${statusClass}">${statusTitle}</span>`;
                             }
                         },
                         {
                             // Actions
                             targets: 5,
-                            title: 'Actions',
+                            title: 'İşlemler',
                             searchable: false,
                             orderable: false,
                             render: (data, type, full) => {
@@ -225,7 +240,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             features: [
                                 {
                                     search: {
-                                        placeholder: 'Search User',
+                                        placeholder: 'Kullanıcı Ara',
                                         text: '_INPUT_'
                                     }
                                 },
@@ -235,7 +250,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                         const isSuperAdmin = currentUser && currentUser.roleName === 'SuperAdmin';
                                         return isSuperAdmin ? [
                                             {
-                                                text: '<span class="d-flex align-items-center gap-2"><i class="icon-base ti tabler-plus icon-xs"></i> Add User</span>',
+                                                text: '<span class="d-flex align-items-center gap-2"><i class="icon-base ti tabler-plus icon-xs"></i> Kullanıcı Ekle</span>',
                                                 className: 'add-new btn btn-primary waves-effect waves-light',
                                                 attr: {
                                                     'data-bs-toggle': 'offcanvas',
@@ -246,7 +261,12 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     })()
                                 }
                             ]
-                        }
+                        },
+                        bottomStart: {
+                            rowClass: 'row mx-3 justify-content-between',
+                            features: ['info']
+                        },
+                        bottomEnd: 'paging'
                     }
                 });
 
@@ -291,14 +311,14 @@ document.addEventListener('DOMContentLoaded', async function () {
             const roleId = parseInt(roleSelect.value);
 
             if (!fullName || !email || !password || !roleId) {
-                alert('Please fill in all fields (Full Name, Email, Password, and Role).');
+                alert('Lütfen tüm alanları doldurun (Ad Soyad, E-posta, Şifre ve Rol).');
                 return;
             }
 
             // Password strength validation (at least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character)
             const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
             if (!passwordRegex.test(password)) {
-                alert('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one digit, and one special character.');
+                alert('Şifre en az 8 karakter uzunluğunda olmalı ve en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir.');
                 return;
             }
 
@@ -326,7 +346,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 }
             } catch (error) {
-                alert(error.message || 'Failed to add user');
+                alert(error.message || 'Kullanıcı eklenemedi');
             }
         });
     }
@@ -336,7 +356,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const deleteBtn = e.target.closest('.delete-record');
         if (deleteBtn) {
             const userId = deleteBtn.getAttribute('data-id');
-            if (confirm('Are you sure you want to deactivate this user?')) {
+            if (confirm('Bu kullanıcıyı devre dışı bırakmak istediğinizden emin misiniz?')) {
                 try {
                     await ErpApi.delete(`/users/${userId}`);
                     // Reload table
@@ -345,7 +365,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         dt_user.clear().rows.add(newResponse.users).draw();
                     }
                 } catch (error) {
-                    alert(error.message || 'Failed to delete user');
+                    alert(error.message || 'Kullanıcı devre dışı bırakılamadı');
                 }
             }
         }
@@ -356,7 +376,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const reactivateBtn = e.target.closest('.reactivate-record');
         if (reactivateBtn) {
             const userId = reactivateBtn.getAttribute('data-id');
-            if (confirm('Are you sure you want to reactivate this user?')) {
+            if (confirm('Bu kullanıcıyı yeniden etkinleştirmek istediğinizden emin misiniz?')) {
                 try {
                     await ErpApi.put(`/users/${userId}`, { isActive: true });
                     // Reload table
@@ -365,7 +385,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                         dt_user.clear().rows.add(newResponse.users).draw();
                     }
                 } catch (error) {
-                    alert(error.message || 'Failed to reactivate user');
+                    alert(error.message || 'Kullanıcı etkinleştirilemedi');
                 }
             }
         }

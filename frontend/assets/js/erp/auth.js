@@ -18,7 +18,7 @@ const ErpAuth = {
                 // Ensure localStorage is cleared if login failed
                 localStorage.removeItem('erp_token');
                 localStorage.removeItem('erp_user');
-                throw new Error(data.message || 'Login failed');
+                throw new Error(data.message || 'Giriş başarısız');
             }
 
             localStorage.setItem('erp_token', data.token);

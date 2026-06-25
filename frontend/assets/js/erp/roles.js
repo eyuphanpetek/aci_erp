@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Render roles cards dynamically
     async function loadRoles() {
         if (!rolesContainer) return;
-        
+
         try {
             const roles = await ErpApi.get('/roles');
             if (!roles) return;
@@ -29,7 +29,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 const details = roleDetails[role.name] || { icon: 'ti tabler-user text-primary', badgeClass: 'bg-label-primary', avatars: ['1.png'] };
                 const col = document.createElement('div');
                 col.className = 'col-xl-4 col-lg-6 col-md-6';
-                
+
                 // Generate dummy avatar initials or images based on count
                 let avatarsHtml = '';
                 const displayCount = Math.min(role.userCount, 4);
@@ -53,7 +53,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     <div class="card h-100">
                         <div class="card-body">
                             <div class="d-flex justify-content-between align-items-center mb-4">
-                                <h6 class="fw-normal mb-0 text-body">Total ${role.userCount} users</h6>
+                                <h6 class="fw-normal mb-0 text-body">Toplam ${role.userCount} kullanıcı</h6>
                                 <ul class="list-unstyled d-flex align-items-center avatar-group mb-0">
                                     ${avatarsHtml}
                                 </ul>
@@ -64,7 +64,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     <span class="badge ${details.badgeClass} mb-2">${role.description}</span>
                                     <div>
                                         <a href="javascript:;" class="role-edit-modal text-muted small">
-                                            <i class="icon-base ${details.icon} icon-sm me-1"></i> Predefined Role
+                                            <i class="icon-base ${details.icon} icon-sm me-1"></i> Tanımlı Sistem Rolü
                                         </a>
                                     </div>
                                 </div>
@@ -89,8 +89,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                         </div>
                         <div class="col-sm-7">
                             <div class="card-body text-sm-end text-center ps-sm-0">
-                                <button class="btn btn-sm btn-primary mb-4 text-nowrap" id="add-role-btn">Add New Role</button>
-                                <p class="mb-0">Add new role,<br>if it doesn't exist.</p>
+                                <button class="btn btn-sm btn-primary mb-4 text-nowrap" id="add-role-btn">Yeni Rol Ekle</button>
+                                <p class="mb-0">Mevcut değilse,<br>yeni bir rol ekleyin.</p>
                             </div>
                         </div>
                     </div>
@@ -98,8 +98,8 @@ document.addEventListener('DOMContentLoaded', async function () {
             `;
             rolesContainer.appendChild(addRoleCol);
 
-            document.getElementById('add-role-btn').addEventListener('click', function() {
-                alert('Role customization is locked to predefined ERP roles in Phase 1.');
+            document.getElementById('add-role-btn').addEventListener('click', function () {
+                alert('Rol özelleştirmeleri bu aşamada sistem rolleriyle sınırlandırılmıştır.');
             });
 
         } catch (error) {
@@ -115,6 +115,21 @@ document.addEventListener('DOMContentLoaded', async function () {
         try {
             if (dt_user_table) {
                 dt_user = new DataTable(dt_user_table, {
+                    language: {
+                        search: '',
+                        searchPlaceholder: 'Kullanıcı Ara',
+                        lengthMenu: '_MENU_',
+                        info: '_TOTAL_ kayıttan _START_ - _END_ arası gösteriliyor',
+                        infoEmpty: 'Kayıt bulunamadı',
+                        infoFiltered: '(_MAX_ kayıt arasından filtrelendi)',
+                        zeroRecords: 'Eşleşen kayıt bulunamadı',
+                        paginate: {
+                            first: 'İlk',
+                            previous: 'Önceki',
+                            next: 'Sonraki',
+                            last: 'Son'
+                        }
+                    },
                     processing: true,
                     serverSide: true,
                     ajax: async function (data, callback, settings) {
@@ -122,9 +137,9 @@ document.addEventListener('DOMContentLoaded', async function () {
                             const page = Math.floor(data.start / data.length) + 1;
                             const pageSize = data.length;
                             const search = data.search.value || '';
-                            
+
                             const response = await ErpApi.get(`/users?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}`);
-                            
+
                             if (response) {
                                 callback({
                                     draw: data.draw,
@@ -208,22 +223,22 @@ document.addEventListener('DOMContentLoaded', async function () {
                             render: (data, type, full) => {
                                 const isActive = full.isActive;
                                 const statusClass = isActive ? 'bg-label-success' : 'bg-label-secondary';
-                                const statusTitle = isActive ? 'Active' : 'Inactive';
+                                const statusTitle = isActive ? 'Aktif' : 'Pasif';
                                 return `<span class="badge ${statusClass}">${statusTitle}</span>`;
                             }
                         },
                         {
                             targets: 5,
-                            title: 'Actions',
+                            title: 'İşlemler',
                             searchable: false,
                             orderable: false,
                             render: (data, type, full) => {
                                 const currentUser = ErpAuth.getUser();
                                 const isSuperAdmin = currentUser && currentUser.roleName === 'SuperAdmin';
                                 const isAdmin = currentUser && currentUser.roleName === 'Admin';
-                                
+
                                 let actionButtons = '';
-                                
+
                                 // Deactivate/Reactivate action
                                 if (full.isActive) {
                                     // Active user: Only SuperAdmin can deactivate
@@ -244,7 +259,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                                         `;
                                     }
                                 }
-                                
+
                                 return `
                                     <div class="d-flex align-items-center">
                                         ${actionButtons}
@@ -274,12 +289,17 @@ document.addEventListener('DOMContentLoaded', async function () {
                             features: [
                                 {
                                     search: {
-                                        placeholder: 'Search User',
+                                        placeholder: 'Kullanıcı Ara',
                                         text: '_INPUT_'
                                     }
                                 }
                             ]
-                        }
+                        },
+                        bottomStart: {
+                            rowClass: 'row mx-3 justify-content-between',
+                            features: ['info']
+                        },
+                        bottomEnd: 'paging'
                     }
                 });
 
@@ -317,7 +337,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const deleteBtn = e.target.closest('.delete-record');
         if (deleteBtn) {
             const userId = deleteBtn.getAttribute('data-id');
-            if (confirm('Are you sure you want to deactivate this user?')) {
+            if (confirm('Bu kullanıcıyı devre dışı bırakmak istediğinizden emin misiniz?')) {
                 try {
                     await ErpApi.delete(`/users/${userId}`);
                     // Reload table and cards
@@ -327,7 +347,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                     await loadRoles();
                 } catch (error) {
-                    alert(error.message || 'Failed to delete user');
+                    alert(error.message || 'Kullanıcı devre dışı bırakılamadı');
                 }
             }
         }
@@ -338,7 +358,7 @@ document.addEventListener('DOMContentLoaded', async function () {
         const reactivateBtn = e.target.closest('.reactivate-record');
         if (reactivateBtn) {
             const userId = reactivateBtn.getAttribute('data-id');
-            if (confirm('Are you sure you want to reactivate this user?')) {
+            if (confirm('Bu kullanıcıyı yeniden etkinleştirmek istediğinizden emin misiniz?')) {
                 try {
                     await ErpApi.put(`/users/${userId}`, { isActive: true });
                     // Reload table and cards
@@ -348,7 +368,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                     await loadRoles();
                 } catch (error) {
-                    alert(error.message || 'Failed to reactivate user');
+                    alert(error.message || 'Kullanıcı etkinleştirilemedi');
                 }
             }
         }

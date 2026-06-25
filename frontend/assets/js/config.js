@@ -71,11 +71,11 @@ window.templateName = document.documentElement.getAttribute('data-template');
 
 if (typeof TemplateCustomizer !== 'undefined') {
   window.templateCustomizer = new TemplateCustomizer({
-    displayCustomizer: true,
-    lang: localStorage.getItem('templateCustomizer-' + templateName + '--Lang') || 'en', // Set default language here
+    displayCustomizer: false,
+    lang: localStorage.getItem('templateCustomizer-' + templateName + '--Lang') || 'tr', // Set default language here
     // defaultPrimaryColor: '#D11BB4',
     // defaultSkin: 1,
-    // defaultTheme: 'system',
+    defaultTheme: 'dark',
     // defaultSemiDark: true,
     // defaultContentLayout: 'wide',
     // defaultHeaderType: 'static',
