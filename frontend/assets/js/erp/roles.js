@@ -113,12 +113,33 @@ document.addEventListener('DOMContentLoaded', async function () {
     let dt_user;
     async function initializeUserTable() {
         try {
-            const response = await ErpApi.get('/users?page=1&pageSize=1000');
-            const usersData = response ? response.users : [];
-
             if (dt_user_table) {
                 dt_user = new DataTable(dt_user_table, {
-                    data: usersData,
+                    processing: true,
+                    serverSide: true,
+                    ajax: async function (data, callback, settings) {
+                        try {
+                            const page = Math.floor(data.start / data.length) + 1;
+                            const pageSize = data.length;
+                            const search = data.search.value || '';
+                            
+                            const response = await ErpApi.get(`/users?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}`);
+                            
+                            if (response) {
+                                callback({
+                                    draw: data.draw,
+                                    recordsTotal: response.totalCount,
+                                    recordsFiltered: response.totalCount,
+                                    data: response.users
+                                });
+                            } else {
+                                callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                            }
+                        } catch (error) {
+                            console.error('Failed to load user list:', error);
+                            callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                        }
+                    },
                     columns: [
                         { data: 'id' },
                         { data: 'id', orderable: false, render: DataTable.render.select() },
@@ -197,11 +218,36 @@ document.addEventListener('DOMContentLoaded', async function () {
                             searchable: false,
                             orderable: false,
                             render: (data, type, full) => {
+                                const currentUser = ErpAuth.getUser();
+                                const isSuperAdmin = currentUser && currentUser.roleName === 'SuperAdmin';
+                                const isAdmin = currentUser && currentUser.roleName === 'Admin';
+                                
+                                let actionButtons = '';
+                                
+                                // Deactivate/Reactivate action
+                                if (full.isActive) {
+                                    // Active user: Only SuperAdmin can deactivate
+                                    if (isSuperAdmin) {
+                                        actionButtons += `
+                                            <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon delete-record" data-id="${full.id}" title="Deactivate User">
+                                                <i class="icon-base ti tabler-trash icon-22px"></i>
+                                            </a>
+                                        `;
+                                    }
+                                } else {
+                                    // Inactive user: SuperAdmin and Admin can reactivate
+                                    if (isSuperAdmin || isAdmin) {
+                                        actionButtons += `
+                                            <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon reactivate-record" data-id="${full.id}" title="Reactivate User">
+                                                <i class="icon-base ti tabler-user-check icon-22px text-success"></i>
+                                            </a>
+                                        `;
+                                    }
+                                }
+                                
                                 return `
                                     <div class="d-flex align-items-center">
-                                        <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon delete-record" data-id="${full.id}">
-                                            <i class="icon-base ti tabler-trash icon-22px"></i>
-                                        </a>
+                                        ${actionButtons}
                                     </div>
                                 `;
                             }
@@ -282,6 +328,27 @@ document.addEventListener('DOMContentLoaded', async function () {
                     await loadRoles();
                 } catch (error) {
                     alert(error.message || 'Failed to delete user');
+                }
+            }
+        }
+    });
+
+    // Handle reactivate user
+    document.addEventListener('click', async function (e) {
+        const reactivateBtn = e.target.closest('.reactivate-record');
+        if (reactivateBtn) {
+            const userId = reactivateBtn.getAttribute('data-id');
+            if (confirm('Are you sure you want to reactivate this user?')) {
+                try {
+                    await ErpApi.put(`/users/${userId}`, { isActive: true });
+                    // Reload table and cards
+                    const newResponse = await ErpApi.get('/users?page=1&pageSize=1000');
+                    if (dt_user) {
+                        dt_user.clear().rows.add(newResponse.users).draw();
+                    }
+                    await loadRoles();
+                } catch (error) {
+                    alert(error.message || 'Failed to reactivate user');
                 }
             }
         }

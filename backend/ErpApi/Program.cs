@@ -63,7 +63,12 @@ builder.Services.AddDbContext<ErpDbContext>(options =>
 
 // Configure Authentication & JWT
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"]!;
+var secretKey = builder.Configuration["JWT_SECRET_KEY"] ?? jwtSettings["SecretKey"];
+
+if (string.IsNullOrEmpty(secretKey))
+{
+    throw new InvalidOperationException("JWT SecretKey is not configured.");
+}
 
 builder.Services.AddAuthentication(options =>
 {
@@ -104,7 +109,10 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+if (!app.Environment.IsDevelopment())
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseCors("AllowAll");
 

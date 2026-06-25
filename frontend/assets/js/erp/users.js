@@ -48,12 +48,33 @@ document.addEventListener('DOMContentLoaded', async function () {
     // Load users and initialize Datatable
     async function initializeUserTable() {
         try {
-            const response = await ErpApi.get('/users?page=1&pageSize=1000');
-            const usersData = response ? response.users : [];
-
             if (dt_user_table) {
                 dt_user = new DataTable(dt_user_table, {
-                    data: usersData,
+                    processing: true,
+                    serverSide: true,
+                    ajax: async function (data, callback, settings) {
+                        try {
+                            const page = Math.floor(data.start / data.length) + 1;
+                            const pageSize = data.length;
+                            const search = data.search.value || '';
+                            
+                            const response = await ErpApi.get(`/users?page=${page}&pageSize=${pageSize}&search=${encodeURIComponent(search)}`);
+                            
+                            if (response) {
+                                callback({
+                                    draw: data.draw,
+                                    recordsTotal: response.totalCount,
+                                    recordsFiltered: response.totalCount,
+                                    data: response.users
+                                });
+                            } else {
+                                callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                            }
+                        } catch (error) {
+                            console.error('Failed to load user list:', error);
+                            callback({ draw: data.draw, recordsTotal: 0, recordsFiltered: 0, data: [] });
+                        }
+                    },
                     columns: [
                         { data: 'id' },
                         { data: 'id', orderable: false, render: DataTable.render.select() },
@@ -139,14 +160,45 @@ document.addEventListener('DOMContentLoaded', async function () {
                             searchable: false,
                             orderable: false,
                             render: (data, type, full) => {
-                                return `
-                                    <div class="d-flex align-items-center">
-                                        <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon delete-record" data-id="${full.id}">
-                                            <i class="icon-base ti tabler-trash icon-22px"></i>
-                                        </a>
-                                        <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon edit-record" data-id="${full.id}">
+                                const currentUser = ErpAuth.getUser();
+                                const isSuperAdmin = currentUser && currentUser.roleName === 'SuperAdmin';
+                                const isAdmin = currentUser && currentUser.roleName === 'Admin';
+                                
+                                let actionButtons = '';
+                                
+                                // Deactivate/Reactivate action
+                                if (full.isActive) {
+                                    // Active user: Only SuperAdmin can deactivate
+                                    if (isSuperAdmin) {
+                                        actionButtons += `
+                                            <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon delete-record" data-id="${full.id}" title="Deactivate User">
+                                                <i class="icon-base ti tabler-trash icon-22px"></i>
+                                            </a>
+                                        `;
+                                    }
+                                } else {
+                                    // Inactive user: SuperAdmin and Admin can reactivate
+                                    if (isSuperAdmin || isAdmin) {
+                                        actionButtons += `
+                                            <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon reactivate-record" data-id="${full.id}" title="Reactivate User">
+                                                <i class="icon-base ti tabler-user-check icon-22px text-success"></i>
+                                            </a>
+                                        `;
+                                    }
+                                }
+                                
+                                // Edit button: Both SuperAdmin and Admin can edit details
+                                if (isSuperAdmin || isAdmin) {
+                                    actionButtons += `
+                                        <a href="javascript:;" class="btn btn-text-secondary rounded-pill waves-effect btn-icon edit-record" data-id="${full.id}" title="Edit User">
                                             <i class="icon-base ti tabler-edit icon-22px"></i>
                                         </a>
+                                    `;
+                                }
+                                
+                                return `
+                                    <div class="d-flex align-items-center">
+                                        ${actionButtons}
                                     </div>
                                 `;
                             }
@@ -178,16 +230,20 @@ document.addEventListener('DOMContentLoaded', async function () {
                                     }
                                 },
                                 {
-                                    buttons: [
-                                        {
-                                            text: '<span class="d-flex align-items-center gap-2"><i class="icon-base ti tabler-plus icon-xs"></i> Add User</span>',
-                                            className: 'add-new btn btn-primary waves-effect waves-light',
-                                            attr: {
-                                                'data-bs-toggle': 'offcanvas',
-                                                'data-bs-target': '#offcanvasAddUser'
+                                    buttons: (function() {
+                                        const currentUser = ErpAuth.getUser();
+                                        const isSuperAdmin = currentUser && currentUser.roleName === 'SuperAdmin';
+                                        return isSuperAdmin ? [
+                                            {
+                                                text: '<span class="d-flex align-items-center gap-2"><i class="icon-base ti tabler-plus icon-xs"></i> Add User</span>',
+                                                className: 'add-new btn btn-primary waves-effect waves-light',
+                                                attr: {
+                                                    'data-bs-toggle': 'offcanvas',
+                                                    'data-bs-target': '#offcanvasAddUser'
+                                                }
                                             }
-                                        }
-                                    ]
+                                        ] : [];
+                                    })()
                                 }
                             ]
                         }
@@ -239,6 +295,13 @@ document.addEventListener('DOMContentLoaded', async function () {
                 return;
             }
 
+            // Password strength validation (at least 8 chars, 1 uppercase, 1 lowercase, 1 number, 1 special character)
+            const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+            if (!passwordRegex.test(password)) {
+                alert('Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one digit, and one special character.');
+                return;
+            }
+
             try {
                 const response = await ErpApi.post('/users', {
                     fullName,
@@ -283,6 +346,26 @@ document.addEventListener('DOMContentLoaded', async function () {
                     }
                 } catch (error) {
                     alert(error.message || 'Failed to delete user');
+                }
+            }
+        }
+    });
+
+    // Handle reactivate user
+    document.addEventListener('click', async function (e) {
+        const reactivateBtn = e.target.closest('.reactivate-record');
+        if (reactivateBtn) {
+            const userId = reactivateBtn.getAttribute('data-id');
+            if (confirm('Are you sure you want to reactivate this user?')) {
+                try {
+                    await ErpApi.put(`/users/${userId}`, { isActive: true });
+                    // Reload table
+                    const newResponse = await ErpApi.get('/users?page=1&pageSize=1000');
+                    if (dt_user) {
+                        dt_user.clear().rows.add(newResponse.users).draw();
+                    }
+                } catch (error) {
+                    alert(error.message || 'Failed to reactivate user');
                 }
             }
         }

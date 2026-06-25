@@ -9,7 +9,8 @@ public class CreateUserRequest
     public string Email { get; set; } = string.Empty;
 
     [Required]
-    [MinLength(6)]
+    [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$", 
+        ErrorMessage = "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, one digit, and one special character.")]
     public string Password { get; set; } = string.Empty;
 
     [Required]

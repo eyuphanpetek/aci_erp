@@ -18,9 +18,9 @@ public class UsersController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetUsers([FromQuery] int page = 1, [FromQuery] int pageSize = 10)
+    public async Task<IActionResult> GetUsers([FromQuery] string? search, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var (users, totalCount) = await _userService.GetUsersAsync(page, pageSize);
+        var (users, totalCount) = await _userService.GetUsersAsync(search, page, pageSize);
         return Ok(new { Users = users, TotalCount = totalCount });
     }
 

@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using ErpApi.Models;
 
 namespace ErpApi.Data;
@@ -6,8 +7,8 @@ public static class SeedData
 {
     public static async Task InitializeAsync(ErpDbContext context)
     {
-        // Ensure database is created
-        await context.Database.EnsureCreatedAsync();
+        // Ensure database is migrated using EF Core migrations tracking
+        await context.Database.MigrateAsync();
 
         // Seed Roles
         if (!context.Roles.Any())

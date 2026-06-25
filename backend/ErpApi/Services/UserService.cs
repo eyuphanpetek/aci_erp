@@ -19,9 +19,14 @@ public class UserService
     /// <summary>
     /// Get all users with their roles (paginated).
     /// </summary>
-    public async Task<(List<UserDto> Users, int TotalCount)> GetUsersAsync(int page = 1, int pageSize = 10)
+    public async Task<(List<UserDto> Users, int TotalCount)> GetUsersAsync(string? search = null, int page = 1, int pageSize = 10)
     {
         var query = _context.Users.Include(u => u.Role).AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            query = query.Where(u => u.FullName.Contains(search) || u.Email.Contains(search));
+        }
 
         var totalCount = await query.CountAsync();
         var users = await query
