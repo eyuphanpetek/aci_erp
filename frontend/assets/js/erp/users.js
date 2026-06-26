@@ -20,7 +20,16 @@ document.addEventListener('DOMContentLoaded', async function () {
         'SuperAdmin': { icon: '<i class="icon-base ti tabler-crown icon-md text-primary me-2"></i>', badgeClass: 'bg-label-danger' },
         'Admin': { icon: '<i class="icon-base ti tabler-device-desktop icon-md text-danger me-2"></i>', badgeClass: 'bg-label-warning' },
         'Manager': { icon: '<i class="icon-base ti tabler-edit icon-md text-warning me-2"></i>', badgeClass: 'bg-label-info' },
+        'Employee': { icon: '<i class="icon-base ti tabler-user icon-md text-success me-2"></i>', badgeClass: 'bg-label-secondary' },
         'User': { icon: '<i class="icon-base ti tabler-user icon-md text-success me-2"></i>', badgeClass: 'bg-label-secondary' }
+    };
+
+    const roleTranslations = {
+        'SuperAdmin': 'Sistem Yöneticisi',
+        'Admin': 'Yönetici',
+        'Manager': 'Müdür',
+        'Employee': 'Personel',
+        'User': 'Kullanıcı'
     };
 
     // Load roles dynamically for the dropdown select
@@ -32,7 +41,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                 roles.forEach(role => {
                     const option = document.createElement('option');
                     option.value = role.id;
-                    option.textContent = role.name;
+                    option.textContent = roleTranslations[role.name] || role.name;
                     roleSelect.appendChild(option);
                 });
             }
@@ -155,7 +164,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                             render: (data, type, full) => {
                                 const role = full.roleName;
                                 const details = roleDetails[role] || { icon: '', badgeClass: 'bg-label-secondary' };
-                                return `<span class='text-truncate d-flex align-items-center text-heading'>${details.icon}${role}</span>`;
+                                const translatedRole = roleTranslations[role] || role;
+                                return `<span class='text-truncate d-flex align-items-center text-heading'>${details.icon}${translatedRole}</span>`;
                             }
                         },
                         {

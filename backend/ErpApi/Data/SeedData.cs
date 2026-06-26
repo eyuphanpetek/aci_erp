@@ -33,7 +33,7 @@ public static class SeedData
                 Id = Guid.NewGuid(),
                 Email = "superadmin@erp.local",
                 PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"),
-                FullName = "System Administrator",
+                FullName = "Sistem Yöneticisi",
                 RoleId = 1, // SuperAdmin
                 IsActive = true,
                 CreatedAt = DateTime.UtcNow,

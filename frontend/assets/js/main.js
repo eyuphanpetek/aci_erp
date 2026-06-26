@@ -432,7 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Search Configuration
 const SearchConfig = {
   container: '#autocomplete',
-  placeholder: 'Search [CTRL + K]',
+  placeholder: 'Ara [CTRL + K]',
   classNames: {
     detachedContainer: 'd-flex flex-column',
     detachedFormContainer: 'd-flex align-items-center justify-content-between border-bottom',
@@ -561,7 +561,7 @@ function initializeAutocomplete() {
                       <path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2m-5-4h.01M12 11v3" />
                     </g>
                   </svg>
-                  <h5 class="mt-2">No results found</h5>
+                  <h5 class="mt-2">Sonuç bulunamadı</h5>
                 </div>
               </div>
             </div>
@@ -635,7 +635,7 @@ function initializeAutocomplete() {
             templates: {
               header({ items, html }) {
                 if (items.length === 0) return null;
-                return html`<span class="search-headings">Files</span>`;
+                return html`<span class="search-headings">Dosyalar</span>`;
               },
               item({ item, html }) {
                 return html`
@@ -676,7 +676,7 @@ function initializeAutocomplete() {
             templates: {
               header({ items, html }) {
                 if (items.length === 0) return null;
-                return html`<span class="search-headings">Members</span>`;
+                return html`<span class="search-headings">Üyeler</span>`;
               },
               item({ item, html }) {
                 return html`

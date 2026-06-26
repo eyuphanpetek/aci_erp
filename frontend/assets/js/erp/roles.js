@@ -12,7 +12,16 @@ document.addEventListener('DOMContentLoaded', async function () {
         'SuperAdmin': { icon: 'ti tabler-crown text-primary', badgeClass: 'bg-label-danger', avatars: ['1.png', '5.png'] },
         'Admin': { icon: 'ti tabler-device-desktop text-danger', badgeClass: 'bg-label-warning', avatars: ['2.png', '12.png'] },
         'Manager': { icon: 'ti tabler-edit text-warning', badgeClass: 'bg-label-info', avatars: ['3.png', '6.png'] },
+        'Employee': { icon: 'ti tabler-user text-success', badgeClass: 'bg-label-secondary', avatars: ['4.png', '10.png'] },
         'User': { icon: 'ti tabler-user text-success', badgeClass: 'bg-label-secondary', avatars: ['4.png', '10.png'] }
+    };
+
+    const roleTranslations = {
+        'SuperAdmin': 'Sistem Yöneticisi',
+        'Admin': 'Yönetici',
+        'Manager': 'Müdür',
+        'Employee': 'Personel',
+        'User': 'Kullanıcı'
     };
 
     // Render roles cards dynamically
@@ -60,7 +69,7 @@ document.addEventListener('DOMContentLoaded', async function () {
                             </div>
                             <div class="d-flex justify-content-between align-items-end">
                                 <div class="role-heading">
-                                    <h5 class="mb-1">${role.name}</h5>
+                                    <h5 class="mb-1">${roleTranslations[role.name] || role.name}</h5>
                                     <span class="badge ${details.badgeClass} mb-2">${role.description}</span>
                                     <div>
                                         <a href="javascript:;" class="role-edit-modal text-muted small">
@@ -214,8 +223,8 @@ document.addEventListener('DOMContentLoaded', async function () {
                             render: (data, type, full) => {
                                 const role = full.roleName;
                                 const details = roleDetails[role] || { icon: 'ti tabler-user', badgeClass: 'bg-label-secondary' };
-                                const iconClass = details.icon.replace('text-primary', '').replace('text-danger', '').replace('text-warning', '').replace('text-success', '');
-                                return `<span class='text-truncate d-flex align-items-center text-heading'><i class="icon-base ${details.icon} icon-md me-2"></i>${role}</span>`;
+                                const translatedRole = roleTranslations[role] || role;
+                                return `<span class='text-truncate d-flex align-items-center text-heading'><i class="icon-base ${details.icon} icon-md me-2"></i>${translatedRole}</span>`;
                             }
                         },
                         {

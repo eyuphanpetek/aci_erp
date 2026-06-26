@@ -77,18 +77,35 @@ const ErpAuth = {
 document.addEventListener('DOMContentLoaded', () => {
     ErpAuth.checkAuth();
 
-    // Dynamically hide administrative sidebar navigation items for non-admins
     const user = ErpAuth.getUser();
-    if (user && user.roleName !== 'SuperAdmin' && user.roleName !== 'Admin') {
-        const adminMenuKeys = ['Users', 'Roles & Permissions'];
-        adminMenuKeys.forEach(key => {
-            const div = document.querySelector(`[data-i18n="${key}"]`);
-            if (div) {
-                const menuItem = div.closest('.menu-item');
-                if (menuItem) {
-                    menuItem.style.setProperty('display', 'none', 'important');
+    if (user) {
+        // Dynamically update navbar user profile dropdown details
+        const userNameEl = document.querySelector('.dropdown-user .flex-grow-1 h6');
+        if (userNameEl) {
+            userNameEl.textContent = user.fullName;
+        }
+        const userRoleEl = document.querySelector('.dropdown-user .flex-grow-1 small');
+        if (userRoleEl) {
+            let roleDisplay = user.roleName;
+            if (user.roleName === 'SuperAdmin') roleDisplay = 'Sistem Yöneticisi';
+            else if (user.roleName === 'Admin') roleDisplay = 'Yönetici';
+            else if (user.roleName === 'Manager') roleDisplay = 'Müdür';
+            else if (user.roleName === 'Employee') roleDisplay = 'Personel';
+            userRoleEl.textContent = roleDisplay;
+        }
+
+        // Dynamically hide administrative sidebar navigation items for non-admins
+        if (user.roleName !== 'SuperAdmin' && user.roleName !== 'Admin') {
+            const adminMenuKeys = ['Users', 'Roles & Permissions'];
+            adminMenuKeys.forEach(key => {
+                const div = document.querySelector(`[data-i18n="${key}"]`);
+                if (div) {
+                    const menuItem = div.closest('.menu-item');
+                    if (menuItem) {
+                        menuItem.style.setProperty('display', 'none', 'important');
+                    }
                 }
-            }
-        });
+            });
+        }
     }
 });
