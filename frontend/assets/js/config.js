@@ -6,6 +6,13 @@
  */
 
 'use strict';
+
+// Set default language to Turkish on first load of the localized system
+if (!localStorage.getItem('erp_lang_initialized')) {
+  localStorage.setItem('templateCustomizer-vertical-menu-template--Lang', 'tr');
+  localStorage.setItem('i18nextLng', 'tr');
+  localStorage.setItem('erp_lang_initialized', 'true');
+}
 /* JS global variables
  !Please use the hex color code (#000) here. Don't use rgba(), hsl(), etc
 */
@@ -72,7 +79,7 @@ window.templateName = document.documentElement.getAttribute('data-template');
 if (typeof TemplateCustomizer !== 'undefined') {
   window.templateCustomizer = new TemplateCustomizer({
     displayCustomizer: false,
-    lang: localStorage.getItem('templateCustomizer-' + templateName + '--Lang') || 'tr', // Set default language here
+    lang: 'tr', // Enforce Turkish default language globally
     // defaultPrimaryColor: '#D11BB4',
     // defaultSkin: 1,
     defaultTheme: 'dark',

@@ -215,7 +215,7 @@ document.addEventListener('DOMContentLoaded', function () {
         debug: false,
         fallbackLng: 'en',
         backend: {
-          loadPath: assetsPath + 'json/locales/{{lng}}.json'
+          loadPath: assetsPath + 'json/locales/{{lng}}.json?v=1.0.1'
         },
         returnObjects: true
       })
