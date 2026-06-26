@@ -1,9 +1,7 @@
 namespace ErpApi.Models.Dtos;
 
-public class UpdateUserRequest
+public class UpdateProfileRequest
 {
     public string? FullName { get; set; }
-    public int? RoleId { get; set; }
-    public bool? IsActive { get; set; }
     public string? Password { get; set; }
 }

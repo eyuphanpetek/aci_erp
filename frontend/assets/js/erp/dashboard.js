@@ -12,7 +12,25 @@ document.addEventListener('DOMContentLoaded', async function () {
         userNameSpan.textContent = user.fullName;
     }
 
-    // 2. Fetch stats from API
+    // Check if user is administrator
+    const isDashboardAdmin = user && (user.roleName === 'SuperAdmin' || user.roleName === 'Admin');
+
+    if (!isDashboardAdmin) {
+        // Hide Users and Roles cards
+        const usersCard = document.getElementById('dashboard-users-card');
+        const rolesCard = document.getElementById('dashboard-roles-card');
+        if (usersCard) usersCard.style.display = 'none';
+        if (rolesCard) rolesCard.style.display = 'none';
+
+        // Expand Database Status Card to fill row
+        const dbstatusCard = document.getElementById('dashboard-dbstatus-card');
+        if (dbstatusCard) {
+            dbstatusCard.className = 'col-12';
+        }
+        return;
+    }
+
+    // 2. Fetch stats from API (Admins only)
     try {
         const usersResponse = await ErpApi.get('/users?page=1&pageSize=1');
         const rolesResponse = await ErpApi.get('/roles');

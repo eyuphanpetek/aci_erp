@@ -1833,6 +1833,42 @@
                     <button type="submit" class="btn btn-primary me-3 data-submit">Gönder</button>
                     <button type="reset" class="btn btn-label-danger" data-bs-dismiss="offcanvas">İptal</button>
                   </form>
+              </div>
+              <!-- Offcanvas to edit user -->
+              <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasEditUser"
+                aria-labelledby="offcanvasEditUserLabel">
+                <div class="offcanvas-header border-bottom">
+                  <h5 id="offcanvasEditUserLabel" class="offcanvas-title">Kullanıcıyı Düzenle</h5>
+                  <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas"
+                    aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body mx-0 flex-grow-0 p-6 h-100">
+                  <form class="edit-user pt-0" id="editUserForm" onsubmit="return false">
+                    <input type="hidden" id="edit-user-id" />
+                    <div class="mb-6 form-control-validation">
+                      <label class="form-label" for="edit-user-fullname">Ad Soyad</label>
+                      <input type="text" class="form-control" id="edit-user-fullname" placeholder="John Doe"
+                        name="editUserFullname" aria-label="John Doe" />
+                    </div>
+                    <div class="mb-6 form-control-validation">
+                      <label class="form-label" for="edit-user-email">E-posta (Değiştirilemez)</label>
+                      <input type="text" id="edit-user-email" class="form-control" placeholder="john.doe@example.com"
+                        aria-label="john.doe@example.com" name="editUserEmail" disabled />
+                    </div>
+                    <div class="mb-6 form-control-validation">
+                      <label class="form-label" for="edit-user-password">Yeni Şifre (Değiştirmek istemiyorsanız boş bırakın)</label>
+                      <input type="password" id="edit-user-password" class="form-control"
+                        placeholder="&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;&#xb7;"
+                        name="editUserPassword" />
+                    </div>
+                    <div class="mb-6" id="edit-user-role-container">
+                      <label class="form-label" for="edit-user-role">Kullanıcı Rolü</label>
+                      <select id="edit-user-role" class="form-select">
+                      </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary me-3 data-submit">Güncelle</button>
+                    <button type="reset" class="btn btn-label-danger" data-bs-dismiss="offcanvas">İptal</button>
+                  </form>
                 </div>
               </div>
             </div>

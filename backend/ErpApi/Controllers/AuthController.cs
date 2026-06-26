@@ -14,11 +14,13 @@ public class AuthController : ControllerBase
 {
     private readonly ErpDbContext _context;
     private readonly AuthService _authService;
+    private readonly UserService _userService;
 
-    public AuthController(ErpDbContext context, AuthService authService)
+    public AuthController(ErpDbContext context, AuthService authService, UserService userService)
     {
         _context = context;
         _authService = authService;
+        _userService = userService;
     }
 
     [HttpPost("login")]
@@ -68,5 +70,30 @@ public class AuthController : ControllerBase
         }
 
         return Ok(UserDto.FromUser(user));
+    }
+
+    [HttpPut("profile")]
+    [Authorize]
+    public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileRequest request)
+    {
+        var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userIdString) || !Guid.TryParse(userIdString, out Guid userId))
+        {
+            return Unauthorized();
+        }
+
+        try
+        {
+            var user = await _userService.UpdateProfileAsync(userId, request);
+            if (user == null)
+            {
+                return NotFound();
+            }
+            return Ok(user);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

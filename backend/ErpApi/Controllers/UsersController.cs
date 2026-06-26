@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using ErpApi.Models.Dtos;
 using ErpApi.Services;
 
@@ -53,9 +54,17 @@ public class UsersController : ControllerBase
     [HttpPut("{id}")]
     public async Task<IActionResult> UpdateUser(Guid id, [FromBody] UpdateUserRequest request)
     {
+        var operatorIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        var operatorRole = User.FindFirst(ClaimTypes.Role)?.Value ?? string.Empty;
+
+        if (string.IsNullOrEmpty(operatorIdClaim) || !Guid.TryParse(operatorIdClaim, out Guid operatorId))
+        {
+            return Unauthorized();
+        }
+
         try
         {
-            var user = await _userService.UpdateUserAsync(id, request);
+            var user = await _userService.UpdateUserAsync(id, request, operatorId, operatorRole);
             if (user == null)
             {
                 return NotFound();
@@ -72,11 +81,24 @@ public class UsersController : ControllerBase
     [Authorize(Roles = "SuperAdmin")]
     public async Task<IActionResult> DeleteUser(Guid id)
     {
-        var success = await _userService.DeactivateUserAsync(id);
-        if (!success)
+        var operatorIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (string.IsNullOrEmpty(operatorIdClaim) || !Guid.TryParse(operatorIdClaim, out Guid operatorId))
         {
-            return NotFound();
+            return Unauthorized();
         }
-        return NoContent();
+
+        try
+        {
+            var success = await _userService.DeactivateUserAsync(id, operatorId);
+            if (!success)
+            {
+                return NotFound();
+            }
+            return NoContent();
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 }

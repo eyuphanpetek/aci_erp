@@ -32,17 +32,38 @@ document.addEventListener('DOMContentLoaded', async function () {
         'User': 'Kullanıcı'
     };
 
+    const editRoleSelect = document.getElementById('edit-user-role');
+
     // Load roles dynamically for the dropdown select
     async function loadRoles() {
         try {
             const roles = await ErpApi.get('/roles');
+            const currentUser = ErpAuth.getUser();
+            const isAdmin = currentUser && currentUser.roleName === 'Admin';
+
+            // Filter out SuperAdmin role from display if logged in user is just Admin
+            const filteredRoles = roles.filter(role => {
+                if (isAdmin && role.id === 1) return false;
+                return true;
+            });
+
             if (roleSelect && roles) {
                 roleSelect.innerHTML = '';
-                roles.forEach(role => {
+                filteredRoles.forEach(role => {
                     const option = document.createElement('option');
                     option.value = role.id;
                     option.textContent = roleTranslations[role.name] || role.name;
                     roleSelect.appendChild(option);
+                });
+            }
+
+            if (editRoleSelect && roles) {
+                editRoleSelect.innerHTML = '';
+                filteredRoles.forEach(role => {
+                    const option = document.createElement('option');
+                    option.value = role.id;
+                    option.textContent = roleTranslations[role.name] || role.name;
+                    editRoleSelect.appendChild(option);
                 });
             }
         } catch (error) {
@@ -400,4 +421,108 @@ document.addEventListener('DOMContentLoaded', async function () {
             }
         }
     });
+
+    // Handle edit user click
+    document.addEventListener('click', async function (e) {
+        const editBtn = e.target.closest('.edit-record');
+        if (editBtn) {
+            const userId = editBtn.getAttribute('data-id');
+            try {
+                const user = await ErpApi.get(`/users/${userId}`);
+                if (user) {
+                    document.getElementById('edit-user-id').value = user.id;
+                    document.getElementById('edit-user-fullname').value = user.fullName;
+                    document.getElementById('edit-user-email').value = user.email;
+                    document.getElementById('edit-user-password').value = ''; // clear password field
+                    
+                    const roleSelectEl = document.getElementById('edit-user-role');
+                    if (roleSelectEl) {
+                        roleSelectEl.value = user.roleId;
+                    }
+
+                    // Hierarchy guard: If logged in as Admin and editing a SuperAdmin,
+                    // disable the form inputs and save button to prevent modifications.
+                    const currentUser = ErpAuth.getUser();
+                    const isTargetSuperAdmin = user.roleName === 'SuperAdmin';
+                    const isOperatorAdmin = currentUser && currentUser.roleName === 'Admin';
+                    
+                    const formInputs = document.querySelectorAll('#editUserForm input, #editUserForm select, #editUserForm button[type="submit"]');
+                    if (isOperatorAdmin && isTargetSuperAdmin) {
+                        formInputs.forEach(input => {
+                            if (input.id !== 'edit-user-email') {
+                                input.setAttribute('disabled', 'true');
+                            }
+                        });
+                        alert('Yönetici yetkisiyle Sistem Yöneticisi hesabı düzenlenemez.');
+                    } else {
+                        formInputs.forEach(input => {
+                            if (input.id !== 'edit-user-email') {
+                                input.removeAttribute('disabled');
+                            }
+                        });
+                    }
+
+                    // Show the offcanvas
+                    const offcanvasEl = document.getElementById('offcanvasEditUser');
+                    const offcanvas = new bootstrap.Offcanvas(offcanvasEl);
+                    offcanvas.show();
+                }
+            } catch (error) {
+                alert(error.message || 'Kullanıcı bilgileri yüklenemedi');
+            }
+        }
+    });
+
+    // Handle edit form submit
+    const editUserForm = document.getElementById('editUserForm');
+    if (editUserForm) {
+        editUserForm.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const userId = document.getElementById('edit-user-id').value;
+            const fullName = document.getElementById('edit-user-fullname').value;
+            const password = document.getElementById('edit-user-password').value;
+            const roleId = parseInt(document.getElementById('edit-user-role').value);
+
+            if (!fullName || !roleId) {
+                alert('Lütfen Ad Soyad ve Rol alanlarını doldurun.');
+                return;
+            }
+
+            const updateData = {
+                fullName,
+                roleId
+            };
+
+            // Optional password update
+            if (password) {
+                // Password strength validation
+                const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z0-9]).{8,}$/;
+                if (!passwordRegex.test(password)) {
+                    alert('Şifre en az 8 karakter uzunluğunda olmalı ve en az bir büyük harf, bir küçük harf, bir rakam ve bir özel karakter içermelidir.');
+                    return;
+                }
+                updateData.password = password;
+            }
+
+            try {
+                const response = await ErpApi.put(`/users/${userId}`, updateData);
+
+                if (response) {
+                    // Close the offcanvas
+                    const offcanvasEl = document.getElementById('offcanvasEditUser');
+                    const offcanvas = bootstrap.Offcanvas.getInstance(offcanvasEl) || new bootstrap.Offcanvas(offcanvasEl);
+                    offcanvas.hide();
+
+                    // Reload the table data
+                    if (dt_user) {
+                        const newResponse = await ErpApi.get('/users?page=1&pageSize=1000');
+                        dt_user.clear().rows.add(newResponse.users).draw();
+                    }
+                }
+            } catch (error) {
+                alert(error.message || 'Kullanıcı güncellenemedi');
+            }
+        });
+    }
 });
