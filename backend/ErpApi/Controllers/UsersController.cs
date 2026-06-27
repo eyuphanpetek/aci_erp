@@ -25,6 +25,15 @@ public class UsersController : ControllerBase
         return Ok(new { Users = users, TotalCount = totalCount });
     }
 
+    [HttpGet("lookup")]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetLookupUsers()
+    {
+        if (User.Identity?.IsAuthenticated != true) return Unauthorized();
+        var users = await _userService.GetLookupUsersAsync();
+        return Ok(users);
+    }
+
     [HttpGet("{id}")]
     public async Task<IActionResult> GetUser(Guid id)
     {

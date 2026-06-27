@@ -40,6 +40,18 @@ public class UserService
     }
 
     /// <summary>
+    /// Get all active users for dropdowns.
+    /// </summary>
+    public async Task<List<UserDto>> GetLookupUsersAsync()
+    {
+        return await _context.Users
+            .Where(u => u.IsActive)
+            .OrderBy(u => u.FullName)
+            .Select(u => UserDto.FromUser(u))
+            .ToListAsync();
+    }
+
+    /// <summary>
     /// Get a single user by ID.
     /// </summary>
     public async Task<UserDto?> GetUserByIdAsync(Guid id)

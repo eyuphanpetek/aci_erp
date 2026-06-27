@@ -36,10 +36,19 @@ const ErpApi = {
                 return null;
             }
 
-            const data = await response.json();
+            let data = null;
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                data = await response.json();
+            } else {
+                const text = await response.text();
+                if (text) {
+                    try { data = JSON.parse(text); } catch(e) { data = { message: text }; }
+                }
+            }
 
             if (!response.ok) {
-                throw new Error(data.message || 'API request failed');
+                throw new Error((data && data.message) || `API request failed with status ${response.status}`);
             }
 
             return data;
