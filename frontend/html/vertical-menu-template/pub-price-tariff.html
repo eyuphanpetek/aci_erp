@@ -1,0 +1,282 @@
+<!doctype html>
+
+<html lang="tr" class="layout-navbar-fixed layout-menu-fixed layout-compact" dir="ltr" data-skin="default"
+  data-bs-theme="dark" data-assets-path="../../assets/" data-template="vertical-menu-template">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
+  <title>AÇI ERP - Fiyat Tarifesi</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="../../assets/img/favicon/logo.png" />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+
+  <link rel="stylesheet" href="../../assets/vendor/fonts/iconify-icons.css" />
+  <link rel="stylesheet" href="../../assets/vendor/libs/node-waves/node-waves.css" />
+  <link rel="stylesheet" href="../../assets/vendor/css/core.css" />
+  <link rel="stylesheet" href="../../assets/css/demo.css" />
+  <link rel="stylesheet" href="../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
+  <link rel="stylesheet" href="../../assets/vendor/libs/sweetalert2/sweetalert2.css" />
+
+  <!-- Helpers -->
+  <script src="../../assets/vendor/js/helpers.js"></script>
+  <script src="../../assets/vendor/js/template-customizer.js"></script>
+  <script src="../../assets/js/config.js?v=1.0.1"></script>
+
+  <!-- ERP Scripts -->
+  <script src="../../assets/js/erp/api.js"></script>
+  <script src="../../assets/js/erp/auth.js?v=3"></script>
+</head>
+
+<body>
+  <!-- Layout wrapper -->
+  <div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+      <!-- Menu -->
+      <aside id="layout-menu" class="layout-menu menu-vertical menu">
+        <div class="app-brand demo">
+          <a href="index.html" class="app-brand-link">
+            <span class="app-brand-logo demo">
+              <img src="../../assets/img/favicon/logo.png" alt="logo" height="26" class="bg-white rounded p-1" />
+            </span>
+            <span class="app-brand-text demo menu-text fw-bold ms-3">AÇI ERP</span>
+          </a>
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="icon-base ti menu-toggle-icon d-none d-xl-block"></i>
+            <i class="icon-base ti tabler-x d-block d-xl-none"></i>
+          </a>
+        </div>
+
+        <div class="menu-inner-shadow"></div>
+
+        <ul class="menu-inner py-1">
+          <!-- Dashboards -->
+          <li class="menu-item">
+            <a href="index.html" class="menu-link">
+              <i class="menu-icon icon-base ti tabler-smart-home"></i>
+              <div data-i18n="Dashboards">Ana Sayfa</div>
+            </a>
+          </li>
+
+          <!-- Yönetim -->
+          <li class="menu-header small">
+            <span class="menu-header-text" data-i18n="Management">YÖNETİM</span>
+          </li>
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon icon-base ti tabler-users"></i>
+              <div data-i18n="User Management">Kullanıcı Yönetimi</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="app-user-list.html" class="menu-link">
+                  <div data-i18n="User List">Kullanıcı Listesi</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="app-access-roles.html" class="menu-link">
+                  <div data-i18n="Roles">Roller</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+
+          <!-- Yayıncılık -->
+          <li class="menu-header small">
+            <span class="menu-header-text" data-i18n="Publishing Section">YAYINCILIK</span>
+          </li>
+          <li class="menu-item active open">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon icon-base ti tabler-book-2"></i>
+              <div data-i18n="Publishing">Yayıncılık</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="pub-dashboard.html" class="menu-link">
+                  <div data-i18n="Cost & Tracking">Maliyet & İş Takibi</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="pub-product-management.html" class="menu-link">
+                  <div data-i18n="Product Management">Ürün Yönetimi</div>
+                </a>
+              </li>
+              <li class="menu-item active">
+                <a href="pub-price-tariff.html" class="menu-link">
+                  <div data-i18n="Price Tariff">Fiyat Tarifesi</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="pub-author-search.html" class="menu-link">
+                  <div data-i18n="Author Search">Yazar Ara</div>
+                </a>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </aside>
+      <!-- / Menu -->
+
+      <!-- Layout page -->
+      <div class="layout-page">
+        <!-- Navbar -->
+        <nav
+          class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+          id="layout-navbar">
+          <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+            <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+              <i class="icon-base ti tabler-menu-2 icon-22px"></i>
+            </a>
+          </div>
+
+          <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+            <div class="navbar-nav align-items-center">
+              <span class="fs-4 fw-medium text-heading mb-0">Fiyat Tarifesi</span>
+            </div>
+
+            <ul class="navbar-nav flex-row align-items-center ms-auto">
+              <!-- Language Dropdown -->
+              <li class="nav-item dropdown-language dropdown me-2 me-xl-0">
+                <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <i class="icon-base ti tabler-language icon-22px text-heading"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0);" data-language="tr" data-text-direction="ltr">
+                      <span>Türkçe</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0);" data-language="en" data-text-direction="ltr">
+                      <span>English</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+
+              <!-- User -->
+              <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <div class="avatar avatar-online">
+                    <img src="../../assets/img/avatars/1.png" alt class="rounded-circle" />
+                  </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0);">
+                      <div class="d-flex">
+                        <div class="flex-shrink-0 me-3">
+                          <div class="avatar avatar-online">
+                            <img src="../../assets/img/avatars/1.png" alt class="rounded-circle" />
+                          </div>
+                        </div>
+                        <div class="flex-grow-1">
+                          <h6 class="mb-0" id="nav-user-fullname">Yükleniyor...</h6>
+                          <small class="text-muted" id="nav-user-role">Yükleniyor...</small>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <div class="dropdown-divider my-1"></div>
+                  </li>
+                  <li>
+                    <a class="dropdown-item text-danger" href="javascript:void(0);" id="btn-logout">
+                      <i class="icon-base ti tabler-logout me-2"></i>
+                      <span>Çıkış Yap</span>
+                    </a>
+                  </li>
+                </ul>
+              </li>
+            </ul>
+          </div>
+        </nav>
+        <!-- / Navbar -->
+
+        <!-- Content wrapper -->
+        <div class="content-wrapper">
+          <!-- Content -->
+          <div class="container-xxl flex-grow-1 container-p-y">
+            <!-- Alert for Non-Admin Users -->
+            <div id="unauthorized-alert" class="alert alert-warning d-none" role="alert">
+              ⚠️ Bu sayfadaki fiyat kalemleri sadece <strong>Yönetici (Admin / SuperAdmin)</strong> rolleri tarafından
+              güncellenebilir.
+            </div>
+
+            <!-- Price Tariff Card -->
+            <div class="card mb-4">
+              <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Yayın Fiyat Kalemleri</h5>
+                <span class="badge bg-label-info">Değişiklikler anında tüm maliyetlere yansır</span>
+              </div>
+              <div class="table-responsive text-nowrap">
+                <table class="table table-hover" id="tariffTable">
+                  <thead>
+                    <tr>
+                      <th>Sıra</th>
+                      <th>Fiyat Kalemi (İş Türü)</th>
+                      <th style="width: 200px;">Birim Fiyat (₺)</th>
+                      <th>Birim</th>
+                    </tr>
+                  </thead>
+                  <tbody class="table-border-bottom-0">
+                    <!-- Loaded dynamically -->
+                    <tr>
+                      <td colspan="4" class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                          <span class="visually-hidden">Yükleniyor...</span>
+                        </div>
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <!-- / Content -->
+
+          <!-- Footer -->
+          <footer class="content-footer footer bg-footer-theme">
+            <div class="container-xxl">
+              <div
+                class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
+                <div class="text-body">
+                  &#169;
+                  <script>document.write(new Date().getFullYear());</script> AÇI Eğitim Kurumları
+                </div>
+              </div>
+            </div>
+          </footer>
+          <!-- / Footer -->
+        </div>
+        <!-- / Content wrapper -->
+      </div>
+      <!-- / Layout page -->
+    </div>
+    <!-- Overlay -->
+    <div class="layout-overlay layout-menu-toggle"></div>
+  </div>
+
+  <!-- Core JS -->
+  <script src="../../assets/vendor/libs/jquery/jquery.js"></script>
+  <script src="../../assets/vendor/libs/popper/popper.js"></script>
+  <script src="../../assets/vendor/js/bootstrap.js"></script>
+  <script src="../../assets/vendor/libs/node-waves/node-waves.js"></script>
+  <script src="../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="../../assets/vendor/libs/i18n/i18n.js"></script>
+  <script src="../../assets/vendor/libs/sweetalert2/sweetalert2.js"></script>
+  <script src="../../assets/vendor/js/menu.js"></script>
+  <script src="../../assets/js/main.js?v=1.0.2"></script>
+
+  <!-- Page JS -->
+  <script src="../../assets/js/erp/price-tariff.js"></script>
+</body>
+
+</html>

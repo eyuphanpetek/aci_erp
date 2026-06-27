@@ -1,3 +1,27 @@
+(function() {
+    try {
+        const userStr = localStorage.getItem('erp_user');
+        if (userStr) {
+            const user = JSON.parse(userStr);
+            if (user.roleName !== 'SuperAdmin' && user.roleName !== 'Admin') {
+                const style = document.createElement('style');
+                style.textContent = `
+                    li:has(> a > div[data-i18n="User Management"]),
+                    li:has(> a > div[data-i18n="Users"]),
+                    li:has(> a > div[data-i18n="Roles & Permissions"]),
+                    li:has(> a > div[data-i18n="Roles"]) {
+                        display: none !important;
+                    }
+                    li.menu-header:has(span[data-i18n="Management"]) {
+                        display: none !important;
+                    }
+                `;
+                document.documentElement.appendChild(style);
+            }
+        }
+    } catch(e) {}
+})();
+
 const ErpAuth = {
     login: async (email, password) => {
         try {
@@ -94,17 +118,19 @@ document.addEventListener('DOMContentLoaded', () => {
             userRoleEl.textContent = roleDisplay;
         }
 
-        // Dynamically hide administrative sidebar navigation items for non-admins
+        // Menu items are hidden via CSS early on, but we also physically remove them from the DOM here
+        // as a fallback in case CSS :has() is unsupported or other scripts try to manipulate them.
         if (user.roleName !== 'SuperAdmin' && user.roleName !== 'Admin') {
-            const adminMenuKeys = ['Users', 'Roles & Permissions'];
+            const adminMenuKeys = ['User Management', 'Users', 'Roles & Permissions', 'Roles'];
             adminMenuKeys.forEach(key => {
-                const div = document.querySelector(`[data-i18n="${key}"]`);
-                if (div) {
+                document.querySelectorAll(`[data-i18n="${key}"]`).forEach(div => {
                     const menuItem = div.closest('.menu-item');
-                    if (menuItem) {
-                        menuItem.style.setProperty('display', 'none', 'important');
-                    }
-                }
+                    if (menuItem) menuItem.remove();
+                });
+            });
+            document.querySelectorAll('.menu-header-text[data-i18n="Management"]').forEach(span => {
+                const header = span.closest('.menu-header');
+                if (header) header.remove();
             });
         }
     }
