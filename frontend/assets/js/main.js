@@ -208,14 +208,22 @@ document.addEventListener('DOMContentLoaded', function () {
   // ---------------------------------------
 
   if (typeof i18next !== 'undefined' && typeof i18NextHttpBackend !== 'undefined') {
+    let lang = localStorage.getItem('templateCustomizer-vertical-menu-template--Lang');
+    if (!lang || localStorage.getItem('aci_lang_forced_v2') !== 'true') {
+      lang = 'tr';
+      localStorage.setItem('templateCustomizer-vertical-menu-template--Lang', 'tr');
+      localStorage.setItem('i18nextLng', 'tr');
+      localStorage.setItem('aci_lang_forced_v2', 'true');
+    }
+
     i18next
       .use(i18NextHttpBackend)
       .init({
-        lng: window.templateCustomizer ? window.templateCustomizer.settings.lang : 'en',
+        lng: lang,
         debug: false,
-        fallbackLng: 'en',
+        fallbackLng: 'tr',
         backend: {
-          loadPath: assetsPath + 'json/locales/{{lng}}.json?v=1.0.1'
+          loadPath: assetsPath + 'json/locales/{{lng}}.json?v=1.0.2'
         },
         returnObjects: true
       })

@@ -7,11 +7,11 @@
 
 'use strict';
 
-// Set default language to Turkish on first load of the localized system
-if (!localStorage.getItem('erp_lang_initialized')) {
+// Force default language to Turkish for AÇI ERP on first load
+if (localStorage.getItem('aci_default_lang_set_v2') !== 'true') {
   localStorage.setItem('templateCustomizer-vertical-menu-template--Lang', 'tr');
   localStorage.setItem('i18nextLng', 'tr');
-  localStorage.setItem('erp_lang_initialized', 'true');
+  localStorage.setItem('aci_default_lang_set_v2', 'true');
 }
 /* JS global variables
  !Please use the hex color code (#000) here. Don't use rgba(), hsl(), etc
