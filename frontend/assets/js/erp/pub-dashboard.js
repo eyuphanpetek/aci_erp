@@ -77,6 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const catId = categorySelect.value;
         if (!catId) {
             tasksCard.style.display = 'none';
+            document.getElementById('totalBar').classList.add('d-none');
             return;
         }
 
@@ -86,6 +87,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             Swal.close();
 
             tasksCard.style.display = 'block';
+            updateTotals(currentTasks);
 
             if (dataTable) {
                 dataTable.clear().rows.add(currentTasks).draw();
@@ -96,6 +98,20 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error(err);
             Swal.fire('Hata!', 'Görevler yüklenirken bir sorun oluştu.', 'error');
         }
+    }
+
+    function updateTotals(tasks) {
+        const totalBar = document.getElementById('totalBar');
+        const taskCount = tasks.length;
+        const pageCount = tasks.reduce((s, t) => s + (t.pageCount || 0), 0);
+        const questionCount = tasks.reduce((s, t) => s + (t.traditionalCount || 0) + (t.conceptCount || 0) + (t.contextCount || 0), 0);
+        const totalCostVal = tasks.reduce((s, t) => s + (t.calculatedCost || 0), 0);
+
+        document.getElementById('totalTaskCount').textContent = taskCount;
+        document.getElementById('totalPageCount').textContent = pageCount;
+        document.getElementById('totalQuestionCount').textContent = questionCount;
+        document.getElementById('totalCost').textContent = canViewCosts ? formatCurrency(totalCostVal) : '-';
+        totalBar.classList.remove('d-none');
     }
 
     function initDataTable(data) {

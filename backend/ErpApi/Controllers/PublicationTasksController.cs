@@ -55,6 +55,17 @@ public class PublicationTasksController : ControllerBase
         return Ok(tasks);
     }
 
+    [HttpGet("author/{userId}")]
+    public async Task<IActionResult> GetTasksByAuthor(Guid userId)
+    {
+        var tasks = await _taskService.GetTasksByAuthorAsync(userId);
+        if (!IsAdminOrManager())
+        {
+            foreach (var t in tasks) t.CalculatedCost = 0;
+        }
+        return Ok(tasks);
+    }
+
     [HttpPut("{id}/cost")]
     public async Task<IActionResult> UpdateTaskCost(int id, [FromBody] UpdateTaskCostDto request)
     {
