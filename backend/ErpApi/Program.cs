@@ -92,6 +92,10 @@ builder.Services.AddAuthentication(options =>
 // Register custom services
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<UserService>();
+builder.Services.AddScoped<CategoryService>();
+builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<TariffService>();
+builder.Services.AddScoped<PublicationTaskService>();
 
 var app = builder.Build();
 
