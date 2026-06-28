@@ -20,6 +20,7 @@ public class CategoryService
     public async Task<List<CategoryDto>> GetAllAsync()
     {
         var categories = await _context.Categories
+            .AsNoTracking()
             .Include(c => c.Products)
                 .ThenInclude(p => p.ProductBranches)
                     .ThenInclude(pb => pb.Branch)

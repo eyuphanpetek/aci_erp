@@ -1,3 +1,3 @@
-## 2024-05-14 - Aggregating publication tasks cost in backend
-**Learning:** The database loading the entire `PublicationTask` table into memory to sum their properties is a measurable performance anti-pattern. Doing a boolean group by `(t.ProductBranch.Product.CategoryId == categoryId)` and `Sum` operations correctly leverages EF core optimization and translates to a clean and efficient `GROUP BY` database query.
-**Action:** Use `.GroupBy().Select(g => new { ... g.Sum(...) })` in EF Core instead of fetching records into memory via `.ToListAsync()` when we only care about totals/sums, as this saves significant memory and CPU overhead in the backend.
+## 2024-06-28 - EF Core AsNoTracking for Read-Only Queries
+**Learning:** EF Core's InMemoryDatabase provider might not reflect the true performance gains of `.AsNoTracking()` because it doesn't have the same tracking overhead characteristics as a real relational database provider like MySQL or SQL Server.
+**Action:** While `.AsNoTracking()` is a proven best practice for read-only mapping to DTOs in EF Core, benchmarking it with an InMemory provider might be misleading or inconclusive. Rely on standard EF Core performance best practices or use a real database instance for accurate benchmarking.
