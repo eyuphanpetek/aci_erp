@@ -1,0 +1,3 @@
+## 2024-05-14 - Aggregating publication tasks cost in backend
+**Learning:** The database loading the entire `PublicationTask` table into memory to sum their properties is a measurable performance anti-pattern. Doing a boolean group by `(t.ProductBranch.Product.CategoryId == categoryId)` and `Sum` operations correctly leverages EF core optimization and translates to a clean and efficient `GROUP BY` database query.
+**Action:** Use `.GroupBy().Select(g => new { ... g.Sum(...) })` in EF Core instead of fetching records into memory via `.ToListAsync()` when we only care about totals/sums, as this saves significant memory and CPU overhead in the backend.
