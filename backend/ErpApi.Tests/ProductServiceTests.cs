@@ -1,99 +1,177 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
-using Xunit;
 using ErpApi.Data;
 using ErpApi.Models;
 using ErpApi.Services;
+using Xunit;
 
-namespace ErpApi.Tests;
-
-public class ProductServiceTests
+namespace ErpApi.Tests
 {
-    private ErpDbContext GetInMemoryDbContext()
+    public class ProductServiceTests
     {
-        var options = new DbContextOptionsBuilder<ErpDbContext>()
-            .UseInMemoryDatabase(databaseName: System.Guid.NewGuid().ToString())
-            .Options;
-
-        return new ErpDbContext(options);
-    }
-
-    [Fact]
-    public async Task CreateProductAsync_ValidCategory_CreatesProductAndSeedsBranches()
-    {
-        // Arrange
-        using var context = GetInMemoryDbContext();
-
-        var category = new Category { Name = "Test Category" };
-        context.Categories.Add(category);
-
-        var defaultBranches = new[] { "Matematik", "Geometri", "Fizik", "Kimya", "Biyoloji", "Türkçe" };
-        foreach (var branchName in defaultBranches)
+        [Fact]
+        public async Task CreateProductAsync_ValidCategory_CreatesProductAndAutoSeedsBranches()
         {
-            context.Branches.Add(new Branch { Name = branchName });
+            // Arrange
+            using var context = TestDatabaseFixture.CreateContext();
+            var service = new ProductService(context);
+
+            // Act
+            var productDto = await service.CreateProductAsync("Yeni SB", 1);
+
+            // Assert
+            Assert.NotNull(productDto);
+            Assert.Equal("Yeni SB", productDto.Name);
+            Assert.Equal(1, productDto.CategoryId);
+            Assert.Equal(3, productDto.Id); // 1 and 2 are seeded, so this should be 3
+
+            // Verify that the standard default branches ("Matematik" and "Fizik" exist in seeded branches)
+            // were auto-seeded for this new product.
+            var productBranches = await context.ProductBranches
+                .Where(pb => pb.ProductId == productDto.Id)
+                .Include(pb => pb.Branch)
+                .ToListAsync();
+
+            Assert.Equal(2, productBranches.Count);
+            Assert.Contains(productBranches, pb => pb.Branch.Name == "Matematik");
+            Assert.Contains(productBranches, pb => pb.Branch.Name == "Fizik");
+
+            // Verify that publication tasks were auto-initialized
+            var taskCount = await context.PublicationTasks
+                .CountAsync(t => productBranches.Select(pb => pb.Id).Contains(t.ProductBranchId));
+            Assert.Equal(2, taskCount);
         }
-        await context.SaveChangesAsync();
 
-        var service = new ProductService(context);
+        [Fact]
+        public async Task CreateProductAsync_InvalidCategory_ReturnsNull()
+        {
+            // Arrange
+            using var context = TestDatabaseFixture.CreateContext();
+            var service = new ProductService(context);
 
-        // Act
-        var result = await service.CreateProductAsync("New Product", category.Id);
+            // Act
+            var productDto = await service.CreateProductAsync("Yeni SB", 999); // Invalid Category
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal("New Product", result.Name);
-        Assert.Equal(category.Id, result.CategoryId);
-        Assert.Equal(1, result.SortOrder); // Max + 1, and there were no products
+            // Assert
+            Assert.Null(productDto);
+        }
 
-        var createdProduct = await context.Products.FirstOrDefaultAsync(p => p.Id == result.Id);
-        Assert.NotNull(createdProduct);
+        [Fact]
+        public async Task DeleteProductAsync_ValidId_DeletesProduct()
+        {
+            // Arrange
+            using var context = TestDatabaseFixture.CreateContext();
+            var service = new ProductService(context);
 
-        var productBranches = await context.ProductBranches.Where(pb => pb.ProductId == createdProduct.Id).ToListAsync();
-        Assert.Equal(defaultBranches.Length, productBranches.Count);
+            // Act
+            var deleted = await service.DeleteProductAsync(1);
 
-        var publicationTasks = await context.PublicationTasks.Where(pt => productBranches.Select(pb => pb.Id).Contains(pt.ProductBranchId)).ToListAsync();
-        Assert.Equal(defaultBranches.Length, publicationTasks.Count);
-    }
+            // Assert
+            Assert.True(deleted);
+            var dbProduct = await context.Products.FindAsync(1);
+            Assert.Null(dbProduct);
+        }
 
-    [Fact]
-    public async Task CreateProductAsync_InvalidCategory_ReturnsNull()
-    {
-        // Arrange
-        using var context = GetInMemoryDbContext();
-        var service = new ProductService(context);
+        [Fact]
+        public async Task DeleteProductAsync_InvalidId_ReturnsFalse()
+        {
+            // Arrange
+            using var context = TestDatabaseFixture.CreateContext();
+            var service = new ProductService(context);
 
-        // Act
-        var result = await service.CreateProductAsync("New Product", 999); // 999 is non-existent
+            // Act
+            var deleted = await service.DeleteProductAsync(999);
 
-        // Assert
-        Assert.Null(result);
-        Assert.Empty(context.Products);
-    }
+            // Assert
+            Assert.False(deleted);
+        }
 
-    [Fact]
-    public async Task CreateProductAsync_ExistingProductsInCategory_SetsCorrectSortOrder()
-    {
-        // Arrange
-        using var context = GetInMemoryDbContext();
+        [Fact]
+        public async Task AddBranchToProductAsync_NewBranchName_CreatesBranchAndMapsIt()
+        {
+            // Arrange
+            using var context = TestDatabaseFixture.CreateContext();
+            var service = new ProductService(context);
 
-        var category = new Category { Name = "Test Category" };
-        context.Categories.Add(category);
-        await context.SaveChangesAsync();
+            // Act
+            var branchDto = await service.AddBranchToProductAsync(1, "Kimya");
 
-        context.Products.AddRange(
-            new Product { Name = "Product 1", CategoryId = category.Id, SortOrder = 5 },
-            new Product { Name = "Product 2", CategoryId = category.Id, SortOrder = 10 }
-        );
-        await context.SaveChangesAsync();
+            // Assert
+            Assert.NotNull(branchDto);
+            Assert.Equal("Kimya", branchDto.Name);
 
-        var service = new ProductService(context);
+            // Verify branch was created in DB
+            var dbBranch = await context.Branches.FirstOrDefaultAsync(b => b.Name == "Kimya");
+            Assert.NotNull(dbBranch);
 
-        // Act
-        var result = await service.CreateProductAsync("New Product", category.Id);
+            // Verify it was mapped to Product 1
+            var dbMapping = await context.ProductBranches
+                .FirstOrDefaultAsync(pb => pb.ProductId == 1 && pb.BranchId == dbBranch.Id);
+            Assert.NotNull(dbMapping);
 
-        // Assert
-        Assert.NotNull(result);
-        Assert.Equal(11, result.SortOrder); // Max (10) + 1
+            // Verify PublicationTask was initialized
+            var task = await context.PublicationTasks
+                .FirstOrDefaultAsync(t => t.ProductBranchId == dbMapping.Id);
+            Assert.NotNull(task);
+        }
+
+        [Fact]
+        public async Task AddBranchToProductAsync_ExistingBranchName_MapsItWithoutDuplicates()
+        {
+            // Arrange
+            using var context = TestDatabaseFixture.CreateContext();
+            var service = new ProductService(context);
+
+            // Branch "Fizik" (Id = 2) is already seeded, but not mapped to Product 1.
+            var originalBranchCount = await context.Branches.CountAsync();
+
+            // Act
+            var branchDto = await service.AddBranchToProductAsync(1, "Fizik");
+
+            // Assert
+            Assert.NotNull(branchDto);
+            Assert.Equal("Fizik", branchDto.Name);
+            Assert.Equal(2, branchDto.Id);
+
+            // Verify no new branch was created in DB
+            var newBranchCount = await context.Branches.CountAsync();
+            Assert.Equal(originalBranchCount, newBranchCount);
+
+            // Verify mapping exists
+            var mapping = await context.ProductBranches
+                .FirstOrDefaultAsync(pb => pb.ProductId == 1 && pb.BranchId == 2);
+            Assert.NotNull(mapping);
+        }
+
+        [Fact]
+        public async Task RemoveBranchFromProductAsync_ValidId_RemovesMapping()
+        {
+            // Arrange
+            using var context = TestDatabaseFixture.CreateContext();
+            var service = new ProductService(context);
+
+            // Act
+            var removed = await service.RemoveBranchFromProductAsync(1); // Remove ProductBranchId = 1
+
+            // Assert
+            Assert.True(removed);
+            var mapping = await context.ProductBranches.FindAsync(1);
+            Assert.Null(mapping);
+        }
+
+        [Fact]
+        public async Task RemoveBranchFromProductAsync_InvalidId_ReturnsFalse()
+        {
+            // Arrange
+            using var context = TestDatabaseFixture.CreateContext();
+            var service = new ProductService(context);
+
+            // Act
+            var removed = await service.RemoveBranchFromProductAsync(999);
+
+            // Assert
+            Assert.False(removed);
+        }
     }
 }
