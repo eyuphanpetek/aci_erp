@@ -58,6 +58,32 @@ namespace ErpApi.Tests
         }
 
         [Fact]
+        public async Task CreateProductAsync_ExistingProductsInCategory_SetsCorrectSortOrder()
+        {
+            // Arrange
+            using var context = TestDatabaseFixture.CreateContext();
+
+            var category = new Category { Name = "Test Category" };
+            context.Categories.Add(category);
+            await context.SaveChangesAsync();
+
+            context.Products.AddRange(
+                new Product { Name = "Product 1", CategoryId = category.Id, SortOrder = 5 },
+                new Product { Name = "Product 2", CategoryId = category.Id, SortOrder = 10 }
+            );
+            await context.SaveChangesAsync();
+
+            var service = new ProductService(context);
+
+            // Act
+            var result = await service.CreateProductAsync("New Product", category.Id);
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(11, result.SortOrder); // Max (10) + 1
+        }
+
+        [Fact]
         public async Task DeleteProductAsync_ValidId_DeletesProduct()
         {
             // Arrange
