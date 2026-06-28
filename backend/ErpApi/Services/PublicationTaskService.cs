@@ -303,26 +303,35 @@ public class PublicationTaskService
         var pagePrice = getPrice("Revize", 175m);
         var testPrice = getPrice("Çapraz", 147m);
 
-        // Fetch all tasks for both category sum and grand sum
-        var allTasks = await _context.PublicationTasks
-            .Include(pt => pt.ProductBranch)
-                .ThenInclude(pb => pb.Product)
+        // Aggregate totals directly in the database instead of loading all tasks into memory
+        var stats = await _context.PublicationTasks
+            .GroupBy(t => t.ProductBranch.Product.CategoryId == categoryId)
+            .Select(g => new
+            {
+                IsCategory = g.Key,
+                TraditionalCount = g.Sum(x => x.TraditionalCount),
+                ConceptCount = g.Sum(x => x.ConceptCount),
+                ContextCount = g.Sum(x => x.ContextCount),
+                TopicPageCount = g.Sum(x => x.TopicPageCount),
+                PageCount = g.Sum(x => x.PageCount),
+                TestCount = g.Sum(x => x.TestCount)
+            })
             .ToListAsync();
 
         decimal categoryTotal = 0;
         decimal grandTotal = 0;
 
-        foreach (var t in allTasks)
+        foreach (var stat in stats)
         {
-            var cost = (t.TraditionalCount * traditionalPrice) +
-                       (t.ConceptCount * conceptPrice) +
-                       (t.ContextCount * contextPrice) +
-                       (t.TopicPageCount * topicPagePrice) +
-                       (t.PageCount * pagePrice) +
-                       (t.TestCount * testPrice);
+            var cost = (stat.TraditionalCount * traditionalPrice) +
+                       (stat.ConceptCount * conceptPrice) +
+                       (stat.ContextCount * contextPrice) +
+                       (stat.TopicPageCount * topicPagePrice) +
+                       (stat.PageCount * pagePrice) +
+                       (stat.TestCount * testPrice);
 
             grandTotal += cost;
-            if (t.ProductBranch.Product.CategoryId == categoryId)
+            if (stat.IsCategory)
             {
                 categoryTotal += cost;
             }
