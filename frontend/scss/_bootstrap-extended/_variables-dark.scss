@@ -101,9 +101,6 @@ $theme-colors-rgb-dark: map-loop($theme-colors-dark, to-rgb, "$value") !default;
 // *******************************************************************************
 $blockquote-footer-color-dark: $gray-600-dark !default;
 
-// TODO: Remove this variable not used in dark theme
-$body-bg-dark: #25293c !default;
-
 // scss-docs-start theme-text-dark-variables
 $light-text-emphasis-dark: $gray-700-dark !default;
 $dark-text-emphasis-dark: $base-dark !default;
@@ -145,7 +142,7 @@ $body-color-dark: $gray-700-dark !default;
 $body-secondary-color-dark: $gray-400-dark !default;
 $body-secondary-bg-dark: $gray-400-dark !default;
 $body-tertiary-color-dark: rgba($body-color-dark, .5) !default;
-$body-tertiary-bg-dark: mix($gray-100-dark, $body-bg-dark, 90%) !default;
+$body-tertiary-bg-dark: mix($gray-100-dark, #25293c, 90%) !default;
 
 
 // Components
