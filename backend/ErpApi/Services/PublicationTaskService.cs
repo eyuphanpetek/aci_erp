@@ -38,11 +38,16 @@ public class PublicationTaskService
             .Where(pb => pb.Product.CategoryId == categoryId)
             .ToListAsync();
 
+        var branchIds = productBranches.Select(pb => pb.Id).ToList();
+
         var existingTaskBranchIds = await _context.PublicationTasks
+            .Where(t => branchIds.Contains(t.ProductBranchId))
             .Select(t => t.ProductBranchId)
             .ToListAsync();
 
-        var missingBranches = productBranches.Where(pb => !existingTaskBranchIds.Contains(pb.Id)).ToList();
+        var existingTaskBranchIdSet = existingTaskBranchIds.ToHashSet();
+
+        var missingBranches = productBranches.Where(pb => !existingTaskBranchIdSet.Contains(pb.Id)).ToList();
         if (missingBranches.Any())
         {
             foreach (var pb in missingBranches)
