@@ -1,7 +1,3 @@
-## 2024-06-28 - EF Core AsNoTracking for Read-Only Queries
-**Learning:** EF Core's InMemoryDatabase provider might not reflect the true performance gains of `.AsNoTracking()` because it doesn't have the same tracking overhead characteristics as a real relational database provider like MySQL or SQL Server.
-**Action:** While `.AsNoTracking()` is a proven best practice for read-only mapping to DTOs in EF Core, benchmarking it with an InMemory provider might be misleading or inconclusive. Rely on standard EF Core performance best practices or use a real database instance for accurate benchmarking.
-
-## 2024-03-18 - Removing Unused SCSS Variables
-**Learning:** Removing unused variables defined in `_variables-dark.scss` reduces the CSS bloat and ensures cleaner overrides.
-**Action:** Always scan for redundant or unused variables (often marked by TODOs) to keep stylesheets lean and verify SCSS builds afterward.
+## 2024-05-24 - Avoiding In-Memory N+1 Lookups with Anti-Joins
+**Learning:** When finding missing related database records, pulling all IDs from a child table into memory using `Select(t => t.Id).ToList()` to perform a `.Contains()` check creates severe N+1 memory scaling bottlenecks as the database grows. Also, when optimizing LINQ queries, it's crucial to retain `.Include()` statements that eager-load data used by downstream code, even if those statements are not strictly required for the `WHERE` clause evaluation.
+**Action:** Always prefer using a direct database anti-join pattern `!context.Table.Any(child => child.ParentId == parent.Id)` to push the filtering onto the SQL engine, avoiding in-memory lookups. Double-check all `.Include()` statements to ensure you aren't inadvertently removing eager-loaded data used later in the method.
