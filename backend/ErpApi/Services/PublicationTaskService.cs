@@ -33,16 +33,14 @@ public class PublicationTaskService
         var testPrice = getPrice("Çapraz", 147m);
 
         // 2. Self-healing check: Ensure every ProductBranch in this category has a PublicationTask
-        var productBranches = await _context.ProductBranches
+        // Optimized: Uses an anti-join pattern in SQL to only fetch missing branches for this category,
+        // avoiding loading all PublicationTask IDs into memory which causes N+1 memory scaling issues.
+        var missingBranches = await _context.ProductBranches
             .Include(pb => pb.Product)
-            .Where(pb => pb.Product.CategoryId == categoryId)
+            .Where(pb => pb.Product.CategoryId == categoryId &&
+                         !_context.PublicationTasks.Any(pt => pt.ProductBranchId == pb.Id))
             .ToListAsync();
 
-        var existingTaskBranchIds = await _context.PublicationTasks
-            .Select(t => t.ProductBranchId)
-            .ToListAsync();
-
-        var missingBranches = productBranches.Where(pb => !existingTaskBranchIds.Contains(pb.Id)).ToList();
         if (missingBranches.Any())
         {
             foreach (var pb in missingBranches)
