@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.RateLimiting;
 using ErpApi.Data;
 using ErpApi.Models.Dtos;
 using ErpApi.Services;
@@ -25,6 +26,7 @@ public class AuthController : ControllerBase
 
     [HttpPost("login")]
     [AllowAnonymous]
+    [EnableRateLimiting("LoginLimiter")]
     public async Task<IActionResult> Login([FromBody] LoginRequest request)
     {
         var user = await _context.Users
