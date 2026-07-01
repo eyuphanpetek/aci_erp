@@ -21,7 +21,7 @@ public class PublicationTaskService
     public async Task<List<PublicationTaskDto>> GetTasksByCategoryAsync(int categoryId)
     {
         // 1. Fetch active tariffs for calculation
-        var tariffs = await _context.TariffItems.ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
+        var tariffs = await _context.TariffItems.AsNoTracking().ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
         
         decimal getPrice(string name, decimal fallback = 0) => tariffs.TryGetValue(name, out var val) ? val : fallback;
 
@@ -33,16 +33,12 @@ public class PublicationTaskService
         var testPrice = getPrice("Çapraz", 147m);
 
         // 2. Self-healing check: Ensure every ProductBranch in this category has a PublicationTask
-        var productBranches = await _context.ProductBranches
-            .Include(pb => pb.Product)
-            .Where(pb => pb.Product.CategoryId == categoryId)
+        // Optimized: Uses a single database query to find missing branches, rather than loading all
+        // product branches and all task IDs across the entire system into memory.
+        var missingBranches = await _context.ProductBranches
+            .Where(pb => pb.Product.CategoryId == categoryId && !pb.Tasks.Any())
             .ToListAsync();
 
-        var existingTaskBranchIds = await _context.PublicationTasks
-            .Select(t => t.ProductBranchId)
-            .ToListAsync();
-
-        var missingBranches = productBranches.Where(pb => !existingTaskBranchIds.Contains(pb.Id)).ToList();
         if (missingBranches.Any())
         {
             foreach (var pb in missingBranches)
@@ -54,6 +50,7 @@ public class PublicationTaskService
 
         // 3. Fetch and map all tasks
         var tasks = await _context.PublicationTasks
+            .AsNoTracking()
             .Include(pt => pt.ProductBranch)
                 .ThenInclude(pb => pb.Product)
                     .ThenInclude(p => p.Category)
@@ -108,7 +105,7 @@ public class PublicationTaskService
 
     public async Task<List<PublicationTaskDto>> GetTasksByAuthorAsync(Guid userId)
     {
-        var tariffs = await _context.TariffItems.ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
+        var tariffs = await _context.TariffItems.AsNoTracking().ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
         decimal getPrice(string name, decimal fallback = 0) => tariffs.TryGetValue(name, out var val) ? val : fallback;
 
         var traditionalPrice = getPrice("Geleneksel Soru", 175m);
@@ -119,6 +116,7 @@ public class PublicationTaskService
         var testPrice = getPrice("Çapraz", 147m);
 
         var tasks = await _context.PublicationTasks
+            .AsNoTracking()
             .Include(pt => pt.ProductBranch)
                 .ThenInclude(pb => pb.Product)
                     .ThenInclude(p => p.Category)
@@ -185,7 +183,7 @@ public class PublicationTaskService
         await _context.SaveChangesAsync();
 
         // Recalculate cost
-        var tariffs = await _context.TariffItems.ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
+        var tariffs = await _context.TariffItems.AsNoTracking().ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
         decimal getPrice(string name, decimal fallback = 0) => tariffs.TryGetValue(name, out var val) ? val : fallback;
 
         var calculatedCost = (task.TraditionalCount * getPrice("Geleneksel Soru", 175m)) +
@@ -253,7 +251,7 @@ public class PublicationTaskService
         await _context.Entry(task).Reference(t => t.Typesetter).LoadAsync();
 
         // Recalculate cost
-        var tariffs = await _context.TariffItems.ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
+        var tariffs = await _context.TariffItems.AsNoTracking().ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
         decimal getPrice(string name, decimal fallback = 0) => tariffs.TryGetValue(name, out var val) ? val : fallback;
 
         var calculatedCost = (task.TraditionalCount * getPrice("Geleneksel Soru", 175m)) +
@@ -293,7 +291,7 @@ public class PublicationTaskService
 
     public async Task<PublishingTotalsDto> GetTotalsAsync(int categoryId)
     {
-        var tariffs = await _context.TariffItems.ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
+        var tariffs = await _context.TariffItems.AsNoTracking().ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
         decimal getPrice(string name, decimal fallback = 0) => tariffs.TryGetValue(name, out var val) ? val : fallback;
 
         var traditionalPrice = getPrice("Geleneksel Soru", 175m);
@@ -305,6 +303,7 @@ public class PublicationTaskService
 
         // Aggregate totals directly in the database instead of loading all tasks into memory
         var stats = await _context.PublicationTasks
+            .AsNoTracking()
             .GroupBy(t => t.ProductBranch.Product.CategoryId == categoryId)
             .Select(g => new
             {
@@ -346,7 +345,7 @@ public class PublicationTaskService
 
     public async Task<List<PublicationTaskDto>> SearchTasksByAuthorAsync(string authorName)
     {
-        var tariffs = await _context.TariffItems.ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
+        var tariffs = await _context.TariffItems.AsNoTracking().ToDictionaryAsync(t => t.Name, t => t.UnitPrice);
         decimal getPrice(string name, decimal fallback = 0) => tariffs.TryGetValue(name, out var val) ? val : fallback;
 
         var traditionalPrice = getPrice("Geleneksel Soru", 175m);
@@ -357,6 +356,7 @@ public class PublicationTaskService
         var testPrice = getPrice("Çapraz", 147m);
 
         var tasks = await _context.PublicationTasks
+            .AsNoTracking()
             .Include(pt => pt.ProductBranch)
                 .ThenInclude(pb => pb.Product)
             .Include(pt => pt.ProductBranch)
